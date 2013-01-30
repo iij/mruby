@@ -2032,27 +2032,34 @@ mrb_str_scan(mrb_state *mrb, mrb_value str)
   struct RString *ps = mrb_str_ptr(str);
   char *p = ps->ptr;
   long len = ps->len;
+  int ai;
 
   mrb_get_args(mrb, "o&", &pat, &b);
   pat = get_pat(mrb, pat, 1);
   if (!mrb_block_given_p()) {
     mrb_value ary = mrb_ary_new(mrb);
+    ai = mrb_gc_arena_save(mrb);
 
     while (!mrb_nil_p(result = scan_once(mrb, str, pat, &start))) {
       match = mrb_backref_get(mrb);
+      mrb_gc_protect(mrb, match);
       mrb_ary_push(mrb, ary, result);
     }
     mrb_backref_set(mrb, match);
+    mrb_gc_arena_restore(mrb, ai);
     return ary;
   }
 
+  ai = mrb_gc_arena_save(mrb);
   while (!mrb_nil_p(result = scan_once(mrb, str, pat, &start))) {
     match = mrb_backref_get(mrb);
+    mrb_gc_protect(mrb, match);
     mrb_yield(mrb, b, result);
     str_mod_check(mrb, str, p, len);
     mrb_backref_set(mrb, match);  /* restore $~ value */
   }
   mrb_backref_set(mrb, match);
+  mrb_gc_arena_restore(mrb, ai);
   return str;
 }
 #endif //ENABLE_REGEXP

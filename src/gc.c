@@ -499,7 +499,9 @@ gc_mark_children(mrb_state *mrb, struct RBasic *obj)
   case MRB_TT_FILE:
     {
       struct RFile *f = (struct RFile*)obj;
-      mrb_gc_mark_value(mrb, f->fptr->path);
+      if (f->fptr) {
+        mrb_gc_mark_value(mrb, f->fptr->path);
+      }
     }
     break;
 #endif
