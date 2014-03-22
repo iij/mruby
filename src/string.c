@@ -200,6 +200,7 @@ str_buf_cat(mrb_state *mrb, struct RString *s, const char *ptr, size_t len)
       ptr = s->ptr + off;
   }
   memcpy(s->ptr + s->len, ptr, len);
+  mrb_assert(total <= MRB_INT_MAX);
   s->len = total;
   s->ptr[total] = '\0';   /* sentinel */
 }
