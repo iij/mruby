@@ -7,7 +7,7 @@ printstr(mrb_state *mrb, mrb_value obj)
 {
   struct RString *str;
   char *s;
-  int len;
+  mrb_int len;
 
   if (mrb_string_p(obj)) {
     str = mrb_str_ptr(obj);
