@@ -95,6 +95,7 @@ os_count_objects(mrb_state *mrb, mrb_value self)
       COUNT_TYPE(MRB_TT_FILE);
       COUNT_TYPE(MRB_TT_ENV);
       COUNT_TYPE(MRB_TT_DATA);
+      COUNT_TYPE(MRB_TT_FIBER);
 #undef COUNT_TYPE
     default:
       type = mrb_fixnum_value(i); break;
