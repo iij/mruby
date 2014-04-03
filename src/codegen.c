@@ -275,8 +275,11 @@ genop_peep(codegen_scope *s, mrb_code i, int val)
       case OP_RETURN:
         return;
       case OP_MOVE:
-        s->iseq[s->pc-1] = MKOP_AB(OP_RETURN, GETARG_B(i0), OP_R_NORMAL);
-        return;
+        if (GETARG_A(i0) >= s->nlocals) {
+          s->iseq[s->pc-1] = MKOP_AB(OP_RETURN, GETARG_B(i0), OP_R_NORMAL);
+          return;
+        }
+        break;
       case OP_SETIV:
       case OP_SETCV:
       case OP_SETCONST:
