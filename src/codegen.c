@@ -811,6 +811,7 @@ gen_call(codegen_scope *s, node *tree, mrb_sym name, int sp, int val)
   else {
     blk = cursp();
   }
+  push();pop();
   pop_n(n+1);
   {
     size_t len;
@@ -1639,6 +1640,7 @@ codegen(codegen_scope *s, node *tree, int val)
         break;
       }
       codegen(s, tree->cdr->cdr->car, VAL);
+      push();pop();
       pop(); pop();
 
       idx = new_msym(s, sym);
