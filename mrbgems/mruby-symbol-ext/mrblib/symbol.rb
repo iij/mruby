@@ -2,7 +2,7 @@ class Symbol
 
   def to_proc
     Proc.new do |obj, *args|
-      obj.send(self, *args)
+      obj.__send__(self, *args)
     end
   end
 
