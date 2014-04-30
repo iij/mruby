@@ -3449,6 +3449,10 @@ skips(parser_state *p, const char *s)
     for (;;) {
       c = nextc(p);
       if (c < 0) return c;
+      if (c == '\n') {
+        p->lineno++;
+        p->column = 0;
+      }
       if (c == *s) break;
     }
     s++;
@@ -3456,7 +3460,10 @@ skips(parser_state *p, const char *s)
       int len = strlen(s);
 
       while (len--) {
-	nextc(p);
+        if (nextc(p) == '\n') {
+          p->lineno++;
+          p->column = 0;
+        }
       }
       return TRUE;
     }
