@@ -3392,14 +3392,14 @@ skip(parser_state *p, char term)
 }
 
 static int
-peek_n(parser_state *p, int c, int n)
+peekc_n(parser_state *p, int n)
 {
   node *list = 0;
   int c0;
 
   do {
     c0 = nextc(p);
-    if (c0 == -1) return FALSE;    /* do not skip partial EOF */
+    if (c0 == -1) return c0;    /* do not skip partial EOF */
     list = push(list, (node*)(intptr_t)c0);
   } while(n--);
   if (p->pb) {
@@ -3408,8 +3408,13 @@ peek_n(parser_state *p, int c, int n)
   else {
     p->pb = list;
   }
-  if (c0 == c) return TRUE;
-  return FALSE;
+  return c0;
+}
+
+static mrb_bool
+peek_n(parser_state *p, int c, int n)
+{
+  return peekc_n(p, n) == c && c >= 0;
 }
 #define peek(p,c) peek_n((p), (c), 0)
 
@@ -4079,14 +4084,20 @@ parser_yylex(parser_state *p)
 
   case '=':
     if (p->column == 1) {
-      if (peeks(p, "begin ") || peeks(p, "begin\n")) {
-        if (skips(p, "\n=end ")) {
+      static const char begin[] = "begin";
+      static const char end[] = "\n=end";
+      if (peeks(p, begin)) {
+        c = peekc_n(p, sizeof(begin)-1);
+        if (c < 0 || isspace(c)) {
+          do {
+            if (!skips(p, end)) {
+              yyerror(p, "embedded document meets end of file");
+              return 0;
+            }
+            c = nextc(p);
+          } while (!(c < 0 || isspace(c)));
           goto retry;
         }
-        if (skips(p, "\n=end\n")) {
-          goto retry;
-        }
-        goto retry;
       }
     }
     if (p->lstate == EXPR_FNAME || p->lstate == EXPR_DOT) {
