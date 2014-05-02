@@ -1378,6 +1378,7 @@ mrb_context_run(mrb_state *mrb, struct RProc *proc, mrb_value self, unsigned int
           }
         }
       L_RESCUE:
+        if (ci->ridx == 0) goto L_STOP;
         proc = ci->proc;
         irep = proc->body.irep;
         pool = irep->pool;
