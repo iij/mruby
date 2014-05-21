@@ -1449,8 +1449,16 @@ mrb_context_run(mrb_state *mrb, struct RProc *proc, mrb_value self, unsigned int
             mrb->c = c->prev;
             c->prev = NULL;
           }
-          mrb->c->stack = mrb->c->ci->stackent;
-          ci = mrb->c->ci = mrb->c->cibase + proc->env->cioff + 1;
+          ci = mrb->c->ci;
+          mrb->c->stack = ci->stackent;
+          mrb->c->ci = mrb->c->cibase + proc->env->cioff + 1;
+          while (ci > mrb->c->ci) {
+            if (ci[-1].acc == CI_ACC_SKIP) {
+              mrb->c->ci = ci;
+              break;
+            }
+            ci--;
+          }
           break;
         default:
           /* cannot happen */
