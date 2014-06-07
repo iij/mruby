@@ -3356,7 +3356,9 @@ nextc(parser_state *p)
       c = (unsigned char)*p->s++;
     }
   }
-  p->column++;
+  if (c >= 0) {
+    p->column++;
+  }
   return c;
 
  eof:
@@ -3371,8 +3373,9 @@ nextc(parser_state *p)
 static void
 pushback(parser_state *p, int c)
 {
-  if (c < 0) return;
-  p->column--;
+  if (c >= 0) {
+    p->column--;
+  }
   p->pb = cons((node*)(intptr_t)c, p->pb);
 }
 
@@ -3396,7 +3399,7 @@ peek_n(parser_state *p, int c, int n)
 
   do {
     c0 = nextc(p);
-    if (c0 < 0) return FALSE;
+    if (c0 == -1) return FALSE;    /* do not skip partial EOF */
     list = push(list, (node*)(intptr_t)c0);
   } while(n--);
   if (p->pb) {
