@@ -507,16 +507,17 @@ mrb_yield_internal(mrb_state *mrb, mrb_value b, int argc, mrb_value *argv, mrb_v
   ci->stackent = mrb->c->stack;
   ci->argc = argc;
   ci->target_class = c;
-  if (MRB_PROC_CFUNC_P(p)) {
-    ci->nregs = argc + 2;
-  }
-  else {
-    ci->nregs = p->body.irep->nregs + 1;
-  }
   ci->acc = CI_ACC_SKIP;
   mrb->c->stack = mrb->c->stack + n;
+  if (MRB_PROC_CFUNC_P(p)) {
+    ci->nregs = argc + 2;
+    stack_extend(mrb, ci->nregs, 0);
+  }
+  else {
+    ci->nregs = p->body.irep->nregs;
+    stack_extend(mrb, ci->nregs, argc+2);
+  }
 
-  stack_extend(mrb, ci->nregs, 0);
   mrb->c->stack[0] = self;
   if (argc > 0) {
     stack_copy(mrb->c->stack+1, argv, argc);
@@ -678,7 +679,7 @@ mrb_context_run(mrb_state *mrb, struct RProc *proc, mrb_value self, unsigned int
   }
   stack_extend(mrb, irep->nregs, stack_keep);
   mrb->c->ci->proc = proc;
-  mrb->c->ci->nregs = irep->nregs + 1;
+  mrb->c->ci->nregs = irep->nregs;
   regs = mrb->c->stack;
   regs[0] = self;
 
