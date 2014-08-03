@@ -626,7 +626,12 @@ mrb_time_to_i(mrb_state *mrb, mrb_value self)
   struct mrb_time *tm;
 
   tm = DATA_GET_PTR(mrb, self, &mrb_time_type, struct mrb_time);
-  return mrb_fixnum_value(tm->sec);
+#ifdef MRB_INT16
+  if (tm->sec > MRB_INT_MAX || tm->sec < MRB_INT_MIN) {
+    return mrb_float_value(mrb, (mrb_float)tm->sec);
+  }
+#endif
+  return mrb_fixnum_value((mrb_int)tm->sec);
 }
 
 /* 15.2.19.7.26 */
@@ -637,7 +642,12 @@ mrb_time_usec(mrb_state *mrb, mrb_value self)
   struct mrb_time *tm;
 
   tm = DATA_GET_PTR(mrb, self, &mrb_time_type, struct mrb_time);
-  return mrb_fixnum_value(tm->usec);
+#ifdef MRB_INT16
+  if (tm->usec > MRB_INT_MAX || tm->usec < MRB_INT_MIN) {
+    return mrb_float_value(mrb, (mrb_float)tm->usec);
+  }
+#endif
+  return mrb_fixnum_value((mrb_int)tm->usec);
 }
 
 /* 15.2.19.7.27 */
