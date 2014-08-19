@@ -31,6 +31,10 @@ MRuby.each_target do
           g.test_rbfiles.count.times do |i|
             f.puts %Q[  ai = mrb_gc_arena_save(mrb);]
             f.puts %Q[  mrb2 = mrb_open();]
+            f.puts %Q[  if (mrb2 == NULL) {]
+            f.puts %Q[    fprintf(stderr, "Invalid mrb_state, exiting \%s", __FUNCTION__);]
+            f.puts %Q[    exit(EXIT_FAILURE);]
+            f.puts %Q[  }]
             f.puts %Q[  val3 = mrb_gv_get(mrb, mrb_intern_cstr(mrb, "$mrbtest_verbose"));]
             f.puts %Q[  if (mrb_test(val3)) {]
             f.puts %Q[    mrb_gv_set(mrb2, mrb_intern_cstr(mrb2, "$mrbtest_verbose"), val3);]
