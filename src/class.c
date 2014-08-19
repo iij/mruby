@@ -125,7 +125,7 @@ mrb_class_outer_module(mrb_state *mrb, struct RClass *c)
   mrb_value outer;
 
   outer = mrb_obj_iv_get(mrb, (struct RObject*)c, mrb_intern_lit(mrb, "__outer__"));
-  if (mrb_nil_p(outer)) return 0;
+  if (mrb_nil_p(outer)) return NULL;
   return mrb_class_ptr(outer);
 }
 
@@ -1015,7 +1015,7 @@ mrb_method_search_vm(mrb_state *mrb, struct RClass **cp, mrb_sym mid)
     }
     c = c->super;
   }
-  return 0;                  /* no method */
+  return NULL;                  /* no method */
 }
 
 struct RProc*
