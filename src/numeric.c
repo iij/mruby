@@ -56,13 +56,12 @@ static mrb_value
 num_pow(mrb_state *mrb, mrb_value x)
 {
   mrb_value y;
-  int both_int = FALSE;
-  mrb_float d;
+  mrb_float d, yv;
 
   mrb_get_args(mrb, "o", &y);
-  if (mrb_fixnum_p(x) && mrb_fixnum_p(y)) both_int = TRUE;
-  d = pow(mrb_to_flo(mrb, x), mrb_to_flo(mrb, y));
-  if (both_int && FIXABLE(d))
+  yv = mrb_to_flo(mrb, y);
+  d = pow(mrb_to_flo(mrb, x), yv);
+  if (mrb_fixnum_p(x) && mrb_fixnum_p(y) && FIXABLE(d) && yv > 0)
     return mrb_fixnum_value((mrb_int)d);
   return mrb_float_value(mrb, d);
 }
