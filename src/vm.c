@@ -259,6 +259,7 @@ cipop(mrb_state *mrb)
     e->cioff = -1;
     stack_copy(p, e->stack, len);
     e->stack = p;
+    mrb_write_barrier(mrb, (struct RBasic *)e);
   }
 
   c->ci--;
