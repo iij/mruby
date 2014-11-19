@@ -1165,6 +1165,12 @@ mrb_context_run(mrb_state *mrb, struct RProc *proc, mrb_value self, unsigned int
       mrb->c->stack[0] = recv;
 
       if (MRB_PROC_CFUNC_P(m)) {
+        if (n == CALL_MAXARGS) {
+          ci->nregs = 3;
+        }
+        else {
+          ci->nregs = n + 2;
+        }
         mrb->c->stack[0] = m->body.func(mrb, recv);
         mrb_gc_arena_restore(mrb, ai);
         if (mrb->exc) goto L_RAISE;
