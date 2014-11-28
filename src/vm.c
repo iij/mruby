@@ -999,12 +999,7 @@ mrb_context_run(mrb_state *mrb, struct RProc *proc, mrb_value self, unsigned int
       else {
         ci->argc = n;
       }
-      if (c->tt == MRB_TT_ICLASS) {
-        ci->target_class = c->c;
-      }
-      else {
-        ci->target_class = c;
-      }
+      ci->target_class = c;
 
       ci->pc = pc + 1;
       ci->acc = a;
