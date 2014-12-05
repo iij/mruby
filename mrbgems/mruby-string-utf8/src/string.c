@@ -1,6 +1,7 @@
 #include "mruby.h"
 #include "mruby/string.h"
 #include "mruby/range.h"
+#include "mruby/numeric.h"
 #include <ctype.h>
 #include <string.h>
 
@@ -195,6 +196,8 @@ mrb_str_aref(mrb_state *mrb, mrb_value str, mrb_value indx)
 
   regexp_check(mrb, indx);
   switch (mrb_type(indx)) {
+    case MRB_TT_FLOAT:
+      indx = mrb_flo_to_fixnum(mrb, indx);
     case MRB_TT_FIXNUM:
       idx = mrb_fixnum(indx);
 
