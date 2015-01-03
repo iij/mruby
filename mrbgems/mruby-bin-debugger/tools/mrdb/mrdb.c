@@ -19,8 +19,6 @@
 #include "apibreak.h"
 #include "apilist.h"
 
-void mrb_show_version(mrb_state *);
-void mrb_show_copyright(mrb_state *);
 void mrdb_state_free(mrb_state *);
 
 static mrb_debug_context *_debug_context = NULL;
@@ -651,12 +649,12 @@ main(int argc, char **argv)
   mrb_debug_context* dbg_backup;
   debug_command *cmd;
 
+ l_restart:
+
   if (mrb == NULL) {
     fputs("Invalid mrb_state, exiting mruby\n", stderr);
     return EXIT_FAILURE;
   }
-
- l_restart:
 
   /* parse command parameters */
   n = parse_args(mrb, argc, argv, &args);
