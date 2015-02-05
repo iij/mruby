@@ -1415,6 +1415,7 @@ mrb_context_run(mrb_state *mrb, struct RProc *proc, mrb_value self, unsigned int
               localjump_error(mrb, LOCALJUMP_ERROR_RETURN);
               goto L_RAISE;
             }
+            mrb->c->stack = mrb->c->ci->stackent;
             mrb->c->ci = ci;
             break;
           }
@@ -1448,6 +1449,7 @@ mrb_context_run(mrb_state *mrb, struct RProc *proc, mrb_value self, unsigned int
             mrb->c = c->prev;
             c->prev = NULL;
           }
+          mrb->c->stack = mrb->c->ci->stackent;
           ci = mrb->c->ci = mrb->c->cibase + proc->env->cioff + 1;
           break;
         default:
