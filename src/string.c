@@ -1323,6 +1323,7 @@ str_gsub(mrb_state *mrb, mrb_value str, mrb_int bang)
   cp = sp;
 
   do {
+    int ai = mrb_gc_arena_save(mrb);
     n++;
     match = mrb_backref_get(mrb);
     regs = RMATCH_REGS(match);
@@ -1352,6 +1353,7 @@ str_gsub(mrb_state *mrb, mrb_value str, mrb_int bang)
     cp = RSTRING_PTR(str) + offset;
     if (offset > RSTRING_LEN(str)) break;
     beg = mrb_reg_search(mrb, pat, str, offset, 0);
+    mrb_gc_arena_restore(mrb, ai);
   } while (beg >= 0);
   if (RSTRING_LEN(str) > offset) {
     mrb_str_buf_cat(mrb, dest, cp, RSTRING_LEN(str) - offset);
