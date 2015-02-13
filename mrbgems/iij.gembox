@@ -50,6 +50,9 @@ MRuby::GemBox.new do |conf|
   # Use Fiber class
   conf.gem :core => "mruby-fiber"
 
+  # Use standard Kernel#eval method
+  conf.gem :core => "mruby-eval"
+
   # Use IIJ modules
   conf.gem :git => 'https://github.com/iij/mruby-digest.git'
   conf.gem :git => 'https://github.com/iij/mruby-dir.git'
