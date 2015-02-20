@@ -45,8 +45,6 @@ These mrbgems can be used with either
 
 ## Continuous Integration
 
-We run automated tests per commit on a variety of platforms including CentOS6/i386, FreeBSD/amd64, NetBSD/arm, etc.
-Test reports are available on http://m.ruby.iijgio.com/ .
 If you want to run the tests on your platform, try the following commands:
 
       $ rake test
