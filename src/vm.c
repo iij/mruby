@@ -338,10 +338,10 @@ mrb_funcall_with_block(mrb_state *mrb, mrb_value self, mrb_sym mid, int argc, mr
 
   if (!mrb->jmp) {
     jmp_buf c_jmp;
-    mrb_callinfo *old_ci = mrb->c->ci;
+    size_t nth_ci = mrb->c->ci - mrb->c->cibase;
 
     if (setjmp(c_jmp) != 0) { /* error */
-      while (old_ci != mrb->c->ci) {
+      while (nth_ci < (mrb->c->ci - mrb->c->cibase)) {
         mrb->c->stack = mrb->c->ci->stackent;
         cipop(mrb);
       }
