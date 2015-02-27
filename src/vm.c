@@ -316,7 +316,7 @@ mrb_funcall_with_block(mrb_state *mrb, mrb_value self, mrb_sym mid, mrb_int argc
 
   if (!mrb->jmp) {
     struct mrb_jmpbuf c_jmp;
-    size_t nth_ci = mrb->c->ci - mrb->c->cibase;
+    ptrdiff_t nth_ci = mrb->c->ci - mrb->c->cibase;
 
     MRB_TRY(&c_jmp) {
       mrb->jmp = &c_jmp;
@@ -713,9 +713,6 @@ argnum_error(mrb_state *mrb, mrb_int num)
 #define END_DISPATCH
 
 #endif
-
-mrb_value mrb_gv_val_get(mrb_state *mrb, mrb_sym sym);
-void mrb_gv_val_set(mrb_state *mrb, mrb_sym sym, mrb_value val);
 
 #define CALL_MAXARGS 127
 
