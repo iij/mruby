@@ -338,7 +338,7 @@ mrb_funcall_with_block(mrb_state *mrb, mrb_value self, mrb_sym mid, int argc, mr
 
   if (!mrb->jmp) {
     jmp_buf c_jmp;
-    size_t nth_ci = mrb->c->ci - mrb->c->cibase;
+    ptrdiff_t nth_ci = mrb->c->ci - mrb->c->cibase;
 
     if (setjmp(c_jmp) != 0) { /* error */
       while (nth_ci < (mrb->c->ci - mrb->c->cibase)) {
