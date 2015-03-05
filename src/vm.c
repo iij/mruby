@@ -482,9 +482,11 @@ mrb_f_send(mrb_state *mrb, mrb_value self)
       regs[i] = regs[i+1];
     }
     ci->argc--;
+    stack_extend(mrb, p->body.irep->nregs, ci->argc+2);
   }
   else {                     /* variable length arguments */
     mrb_ary_shift(mrb, regs[0]);
+    stack_extend(mrb, (p->body.irep->nregs < 3) ? 3 : p->body.irep->nregs, 3);
   }
   cipush(mrb);
   ci = mrb->c->ci;
