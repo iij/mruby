@@ -1386,17 +1386,18 @@ mrb_context_run(mrb_state *mrb, struct RProc *proc, mrb_value self, unsigned int
             mrb->jmp = prev_jmp;
             mrb_longjmp(mrb);
           }
-          if (ci > mrb->c->cibase) {
-            while (eidx > ci[-1].eidx) {
-              ecall(mrb, --eidx);
-            }
-          }
-          else if (ci == mrb->c->cibase) {
+          if (ci == mrb->c->cibase) {
             if (ci->ridx == 0) {
               regs = mrb->c->stack = mrb->c->stbase;
               goto L_STOP;
             }
             break;
+          }
+          /* call ensure only when we skip this callinfo */
+          if (ci[0].ridx == ci[-1].ridx) {
+            while (eidx > ci[-1].eidx) {
+              ecall(mrb, --eidx);
+            }
           }
         }
       L_RESCUE:
