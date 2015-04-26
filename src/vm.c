@@ -1135,6 +1135,14 @@ mrb_context_run(mrb_state *mrb, struct RProc *proc, mrb_value self, unsigned int
       int a = GETARG_A(i);
       int n = GETARG_C(i);
 
+      if (mid == 0) {
+        mrb_value exc;
+        static const char m[] = "super called outside of method";
+      out_super:
+        exc = mrb_exc_new(mrb, E_NOMETHOD_ERROR, m, sizeof(m) - 1);
+        mrb->exc = mrb_obj_ptr(exc);
+        goto L_RAISE;
+      }
       recv = regs[0];
       c = mrb->c->ci->target_class->super;
       m = mrb_method_search_vm(mrb, &c, mid);
@@ -1219,11 +1227,7 @@ mrb_context_run(mrb_state *mrb, struct RProc *proc, mrb_value self, unsigned int
       else {
         struct REnv *e = uvenv(mrb, lv-1);
         if (!e) {
-          mrb_value exc;
-          static const char m[] = "super called outside of method";
-          exc = mrb_exc_new(mrb, E_NOMETHOD_ERROR, m, sizeof(m) - 1);
-          mrb->exc = mrb_obj_ptr(exc);
-          goto L_RAISE;
+          goto out_super;
         }
         stack = e->stack + 1;
       }
