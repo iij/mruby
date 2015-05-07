@@ -176,6 +176,12 @@ assert('Splat and mass assignment') do
   assert_equal [8,9], c
 end
 
+assert('Splat without assignment') do
+  * = [0]
+  a, * = [1, 2]
+  assert_equal 1, a
+end
+
 assert('Return values of case statements') do
   a = [] << case 1
   when 3 then 2

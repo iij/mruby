@@ -936,6 +936,9 @@ gen_assignment(codegen_scope *s, node *node, int sp, int val)
       genop_peep(s, MKOP_AB(OP_MOVE, cursp(), sp), val);
     }
     break;
+  /* splat without assignment */
+  case NODE_NIL:
+    break;
 
   default:
 #ifdef ENABLE_STDIO
