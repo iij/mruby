@@ -239,7 +239,9 @@ local_nest(parser_state *p)
 static void
 local_unnest(parser_state *p)
 {
-  p->locals = p->locals->cdr;
+  if (p->locals) {
+    p->locals = p->locals->cdr;
+  }
 }
 
 static mrb_bool
@@ -261,7 +263,9 @@ local_var_p(parser_state *p, mrb_sym sym)
 static void
 local_add_f(parser_state *p, mrb_sym sym)
 {
-  p->locals->car = push(p->locals->car, nsym(sym));
+  if (p->locals) {
+    p->locals->car = push(p->locals->car, nsym(sym));
+  }
 }
 
 static void
@@ -4146,7 +4150,9 @@ parser_yylex(parser_state *p)
     p->lineno++;
     p->column = 0;
     if (p->parsing_heredoc != NULL) {
-      return parse_string(p);
+      if (p->lex_strterm) {
+        return parse_string(p);
+      }
     }
     goto retry;
   default:
