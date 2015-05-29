@@ -518,3 +518,8 @@ assert('clone Module') do
 
   B.new.foo
 end
+
+assert('module with non-class/module outer raises TypeError') do
+  assert_raise(TypeError) { module 0::M1 end }
+  assert_raise(TypeError) { module []::M2 end }
+end

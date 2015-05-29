@@ -129,11 +129,26 @@ mrb_class_outer_module(mrb_state *mrb, struct RClass *c)
   return mrb_class_ptr(outer);
 }
 
+static void
+check_if_class_or_module(mrb_state *mrb, mrb_value obj)
+{
+  switch (mrb_type(obj)) {
+  case MRB_TT_CLASS:
+  case MRB_TT_SCLASS:
+  case MRB_TT_MODULE:
+    return;
+  default:
+    mrb_raisef(mrb, E_TYPE_ERROR, "%S is not a class/module", mrb_inspect(mrb, obj));
+  }
+}
+
 struct RClass*
 mrb_vm_define_module(mrb_state *mrb, mrb_value outer, mrb_sym id)
 {
   struct RClass *c;
   mrb_value v;
+
+  check_if_class_or_module(mrb, outer);
 
   if (mrb_const_defined(mrb, outer, id)) {
     v = mrb_const_get(mrb, outer, id);
@@ -168,6 +183,8 @@ struct RClass*
 mrb_vm_define_class(mrb_state *mrb, mrb_value outer, mrb_value super, mrb_sym id)
 {
   struct RClass *c, *s;
+
+  check_if_class_or_module(mrb, outer);
 
   if (mrb_const_defined(mrb, outer, id)) {
     mrb_value v = mrb_const_get(mrb, outer, id);
