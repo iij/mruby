@@ -2033,33 +2033,28 @@ mrb_context_run(mrb_state *mrb, struct RProc *proc, mrb_value self, unsigned int
       int pre  = GETARG_B(i);
       int post = GETARG_C(i);
 
+      struct RArray *ary;
+      int len, idx;
+
       if (!mrb_array_p(v)) {
-        regs[a++] = mrb_ary_new_capa(mrb, 0);
+        v = mrb_ary_new_from_values(mrb, 1, &regs[a]);
+      }
+      ary = mrb_ary_ptr(v);
+      len = ary->len;
+      if (len > pre + post) {
+        regs[a++] = mrb_ary_new_from_values(mrb, len - pre - post, ary->ptr+pre);
         while (post--) {
-          SET_NIL_VALUE(regs[a]);
-          a++;
+          regs[a++] = ary->ptr[len-post-1];
         }
       }
       else {
-        struct RArray *ary = mrb_ary_ptr(v);
-        int len = ary->len;
-        int i;
-
-        if (len > pre + post) {
-          regs[a++] = mrb_ary_new_from_values(mrb, len - pre - post, ary->ptr+pre);
-          while (post--) {
-            regs[a++] = ary->ptr[len-post-1];
-          }
+        regs[a++] = mrb_ary_new_capa(mrb, 0);
+        for (idx=0; idx+pre<len; idx++) {
+          regs[a+idx] = ary->ptr[pre+idx];
         }
-        else {
-          regs[a++] = mrb_ary_new_capa(mrb, 0);
-          for (i=0; i+pre<len; i++) {
-            regs[a+i] = ary->ptr[pre+i];
-          }
-          while (i < post) {
-            SET_NIL_VALUE(regs[a+i]);
-            i++;
-          }
+        while (idx < post) {
+          SET_NIL_VALUE(regs[a+idx]);
+          idx++;
         }
       }
       ARENA_RESTORE(mrb, ai);
