@@ -957,13 +957,6 @@ gen_assignment(codegen_scope *s, node *tree, int sp, int val)
     gen_vmassignment(s, tree->car, sp, val);
     break;
 
-    push();
-    gen_call(s, tree, attrsym(s, sym(tree->cdr->car)), sp, NOVAL);
-    pop();
-    if (val) {
-      genop_peep(s, MKOP_AB(OP_MOVE, cursp(), sp), val);
-    }
-    break;
   /* splat without assignment */
   case NODE_NIL:
     break;
@@ -1622,8 +1615,14 @@ codegen(codegen_scope *s, node *tree, int val)
             }
           }
           if (t->car) {         /* rest (len - pre - post) */
-            int rn = len - post - n;
+            int rn;
 
+            if (len < post + n) {
+              rn = 0;
+            }
+            else {
+              rn = len - post - n;
+            }
             genop(s, MKOP_ABC(OP_ARRAY, cursp(), rhs+n, rn));
             gen_assignment(s, t->car, cursp(), NOVAL);
             n += rn;
