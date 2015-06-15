@@ -199,3 +199,10 @@ if Object.const_defined?(:Time)
   end
 end
 
+assert('2000 times 500us make a second') do
+  t = Time.utc 2015
+  2000.times do
+    t += 0.0005
+  end
+  t.usec == 0
+end

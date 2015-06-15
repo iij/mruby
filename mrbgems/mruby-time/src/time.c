@@ -5,9 +5,10 @@
 */
 
 
-#include "mruby.h"
 #include <stdio.h>
 #include <time.h>
+#include <math.h>
+#include "mruby.h"
 #include "mruby/class.h"
 #include "mruby/data.h"
 
@@ -153,12 +154,19 @@ time_alloc(mrb_state *mrb, double sec, double usec, enum mrb_timezone timezone)
 
   tm = (struct mrb_time *)mrb_malloc(mrb, sizeof(struct mrb_time));
   tm->sec  = (time_t)sec;
-  tm->usec = (sec - tm->sec) * 1.0e6 + usec;
+  if (sizeof(time_t) == 4 && (sec > (double)INT32_MAX || (double)INT32_MIN > sec)) {
+    goto out_of_range;
+  }
+  else if ((sec > 0 && tm->sec < 0) || (sec < 0 && (double)tm->sec > sec)) {
+  out_of_range:
+    mrb_raisef(mrb, E_ARGUMENT_ERROR, "%S out of Time range", mrb_float_value(mrb, sec));
+  }
+  tm->usec = (time_t)llrint((sec - tm->sec) * 1.0e6 + usec);
   while (tm->usec < 0) {
     tm->sec--;
     tm->usec += 1.0e6;
   }
-  while (tm->usec > 1.0e6) {
+  while (tm->usec >= 1000000) {
     tm->sec++;
     tm->usec -= 1.0e6;
   }
