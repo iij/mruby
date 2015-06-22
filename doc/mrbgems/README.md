@@ -26,6 +26,15 @@ conf.gem :github => 'masuidrive/mrbgems-example', :branch => 'master'
 conf.gem :bitbucket => 'mruby/mrbgems-example', :branch => 'master'
 ```
 
+To use mrbgem from [mgem-list](https://github.com/mruby/mgem-list) use `:mgem` option:
+```ruby
+conf.gem :mgem => 'mruby-yaml'
+conf.gem :mgem => 'yaml' # 'mruby-' prefix could be omitted
+```
+
+If there is missing dependencies, mrbgem dependencies solver will reference
+mrbgem from core or mgem-list.
+
 To pull all gems from remote GIT repository on build, call ```./minirake -p```,
 or ```./minirake --pull-gems```.
 
@@ -142,7 +151,7 @@ MRuby::Gem::Specification.new('c_and_ruby_extension_example') do |spec|
   # Use any version of mruby-uv from github.
   spec.add_dependency('mruby-uv', '>= 0.0.0', :github => 'mattn/mruby-uv')
 
-  # Use latest mruby-onig-regexp from github. (version requirements can be ignored)
+  # Use latest mruby-onig-regexp from github. (version requirements can be omitted)
   spec.add_dependency('mruby-onig-regexp', :github => 'mattn/mruby-onig-regexp')
 end
 ```
