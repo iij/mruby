@@ -1979,7 +1979,8 @@ bad:
 char *
 mrb_string_value_cstr(mrb_state *mrb, mrb_value *ptr)
 {
-  struct RString *ps = mrb_str_ptr(*ptr);
+  mrb_value str = mrb_str_to_str(mrb, *ptr);
+  struct RString *ps = mrb_str_ptr(str);
   char *s = ps->ptr;
   mrb_int len;
 
