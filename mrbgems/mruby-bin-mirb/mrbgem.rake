@@ -38,4 +38,6 @@ MRuby::Gem::Specification.new('mruby-bin-mirb') do |spec|
       end
     end
   end
+
+  spec.add_dependency('mruby-compiler', :core => 'mruby-compiler')
 end
