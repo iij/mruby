@@ -71,7 +71,7 @@ module MRuby
 
         fail "unknown mgem protocol: #{conf['protocol']}" if conf['protocol'] != 'git'
         params[:git] = conf['repository']
-        params[:branch] = conf['branch"] if conf["branch']
+        params[:branch] = conf['branch'] if conf['branch']
       end
 
       if params[:core]
@@ -91,6 +91,7 @@ module MRuby
           end
         else
           options = [params[:options]] || []
+          options << "--recursive"
           options << "--branch \"#{branch}\""
           options << "--depth 1" unless params[:checksum_hash]
           FileUtils.mkdir_p "#{gem_clone_dir}"
