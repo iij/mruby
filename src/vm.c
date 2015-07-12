@@ -638,6 +638,8 @@ void mrb_gv_val_set(mrb_state *mrb, mrb_sym sym, mrb_value val);
 
 #define CALL_MAXARGS 127
 
+void mrb_method_missing(mrb_state *mrb, mrb_sym name, mrb_value self, mrb_value args);
+
 mrb_value
 mrb_context_run(mrb_state *mrb, struct RProc *proc, mrb_value self, unsigned int stack_keep)
 {
@@ -989,8 +991,15 @@ mrb_context_run(mrb_state *mrb, struct RProc *proc, mrb_value self, unsigned int
 
         m = mrb_method_search_vm(mrb, &c, missing);
         if (!m) {
-          mrb_no_method_error(mrb, mid, n, regs+a+1,
-                              "undefined method '%S' for %S", mrb_sym2str(mrb, mid), recv);
+          mrb_value args;
+
+          if (n == CALL_MAXARGS) {
+            args = regs[a+1];
+          }
+          else {
+            args = mrb_ary_new_from_values(mrb, n, regs+a+1);
+          }
+          mrb_method_missing(mrb, mid, recv, args);
         }
         mid = missing;
         if (n == CALL_MAXARGS) {
