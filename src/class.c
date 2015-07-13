@@ -435,7 +435,7 @@ to_sym(mrb_state *mrb, mrb_value ss)
     ----------------------------------------------------------------------------------------------
     o:      Object         [mrb_value]
     C:      class/module   [mrb_value]
-    S:      String         [mrb_value]
+    S:      String         [mrb_value]            when ! follows the value may be nil
     A:      Array          [mrb_value]
     H:      Hash           [mrb_value]
     s:      String         [char*,mrb_int]        Receive two arguments.
@@ -525,6 +525,14 @@ mrb_get_args(mrb_state *mrb, const char *format, ...)
         mrb_value *p;
 
         p = va_arg(ap, mrb_value*);
+        if (*format == '!') {
+          format++;
+          if (mrb_nil_p(*sp)) {
+            *p = *sp++;
+            i++;
+            break;
+          }
+        }
         if (i < argc) {
           *p = to_str(mrb, *sp++);
           i++;
@@ -1262,6 +1270,31 @@ mrb_bob_not(mrb_state *mrb, mrb_value cv)
   return mrb_bool_value(!mrb_test(cv));
 }
 
+void
+mrb_method_missing(mrb_state *mrb, mrb_sym name, mrb_value self, mrb_value args)
+{
+  mrb_sym inspect;
+  mrb_value repr;
+
+  inspect = mrb_intern_lit(mrb, "inspect");
+  if (mrb->c->ci > mrb->c->cibase && mrb->c->ci[-1].mid == inspect) {
+    /* method missing in inspect; avoid recursion */
+    repr = mrb_any_to_s(mrb, self);
+  }
+  else if (mrb_respond_to(mrb, self, inspect) && mrb->c->ci - mrb->c->cibase < 64) {
+    repr = mrb_funcall_argv(mrb, self, inspect, 0, 0);
+    if (mrb_string_p(repr) && RSTRING_LEN(repr) > 64) {
+      repr = mrb_any_to_s(mrb, self);
+    }
+  }
+  else {
+    repr = mrb_any_to_s(mrb, self);
+  }
+
+  mrb_no_method_error(mrb, name, args, "undefined method '%S' for %S",
+                      mrb_sym2str(mrb, name), repr);
+}
+
 /* 15.3.1.3.30 */
 /*
  *  call-seq:
@@ -1301,27 +1334,9 @@ mrb_bob_missing(mrb_state *mrb, mrb_value mod)
   mrb_sym name;
   mrb_value *a;
   mrb_int alen;
-  mrb_sym inspect;
-  mrb_value repr;
 
   mrb_get_args(mrb, "n*", &name, &a, &alen);
-
-  inspect = mrb_intern_lit(mrb, "inspect");
-  if (mrb->c->ci > mrb->c->cibase && mrb->c->ci[-1].mid == inspect) {
-    /* method missing in inspect; avoid recursion */
-    repr = mrb_any_to_s(mrb, mod);
-  }
-  else if (mrb_respond_to(mrb, mod, inspect) && mrb->c->ci - mrb->c->cibase < 64) {
-    repr = mrb_funcall_argv(mrb, mod, inspect, 0, 0);
-    if (mrb_string_p(repr) && RSTRING_LEN(repr) > 64) {
-      repr = mrb_any_to_s(mrb, mod);
-    }
-  }
-  else {
-    repr = mrb_any_to_s(mrb, mod);
-  }
-
-  mrb_no_method_error(mrb, name, alen, a, "undefined method '%S' for %S", mrb_sym2str(mrb, name), repr);
+  mrb_method_missing(mrb, name, mod, mrb_ary_new_from_values(mrb, alen, a));
   /* not reached */
   return mrb_nil_value();
 }
