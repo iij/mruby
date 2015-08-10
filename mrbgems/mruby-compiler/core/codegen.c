@@ -188,6 +188,11 @@ genop_peep(codegen_scope *s, mrb_code i, int val)
       if (val) break;
       switch (c0) {
       case OP_MOVE:
+        if (GETARG_A(i) == GETARG_A(i0)) {
+          /* skip overriden OP_MOVE */
+          s->pc--;
+          s->iseq[s->pc] = i;
+        }
         if (GETARG_B(i) == GETARG_A(i0) && GETARG_A(i) == GETARG_B(i0)) {
           /* skip swapping OP_MOVE */
           return 0;
@@ -406,7 +411,18 @@ push_(codegen_scope *s)
   nregs_update;
 }
 
+static void
+push_n_(codegen_scope *s, size_t n)
+{
+  if (s->sp+n > 511) {
+    codegen_error(s, "too complex expression");
+  }
+  s->sp+=n;
+  nregs_update;
+}
+
 #define push() push_(s)
+#define push_n(n) push_n_(s,n)
 #define pop_(s) ((s)->sp--)
 #define pop() pop_(s)
 #define pop_n(n) (s->sp-=(n))
@@ -1001,6 +1017,8 @@ gen_vmassignment(codegen_scope *s, node *tree, int rhs, int val)
     else {
       pop();
     }
+    push_n(post);
+    pop_n(post);
     genop(s, MKOP_ABC(OP_APOST, cursp(), n, post));
     n = 1;
     if (t->car) {               /* rest */
