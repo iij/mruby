@@ -1853,7 +1853,7 @@ mrb_cstr_to_inum(mrb_state *mrb, const char *str, int base, int badcheck)
   char *end;
   char sign = 1;
   int c;
-  unsigned long n;
+  unsigned long long n;
   mrb_int val;
 
 #undef ISDIGIT
@@ -1958,7 +1958,7 @@ mrb_cstr_to_inum(mrb_state *mrb, const char *str, int base, int badcheck)
     return mrb_fixnum_value(0);
   }
 
-  n = strtoul((char*)str, &end, base);
+  n = strtoull((char*)str, &end, base);
   if (n > MRB_INT_MAX) {
     mrb_raisef(mrb, E_ARGUMENT_ERROR, "string (%S) too big for integer", mrb_str_new_cstr(mrb, str));
   }
