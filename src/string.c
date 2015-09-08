@@ -77,9 +77,18 @@ str_decref(mrb_state *mrb, mrb_shared_string *shared)
   }
 }
 
+static void
+check_frozen(mrb_state *mrb, struct RString *s)
+{
+  if (RSTR_FROZEN_P(s)) {
+    mrb_raise(mrb, E_RUNTIME_ERROR, "can't modify frozen string");
+  }
+}
+
 MRB_API void
 mrb_str_modify(mrb_state *mrb, struct RString *s)
 {
+  check_frozen(mrb, s);
   if (RSTR_SHARED_P(s)) {
     mrb_shared_string *shared = s->as.heap.aux.shared;
 
@@ -119,6 +128,15 @@ mrb_str_modify(mrb_state *mrb, struct RString *s)
     RSTR_UNSET_NOFREE_FLAG(s);
     return;
   }
+}
+
+static mrb_value
+mrb_str_freeze(mrb_state *mrb, mrb_value str)
+{
+  struct RString *s = mrb_str_ptr(str);
+
+  RSTR_SET_FROZEN_FLAG(s);
+  return str;
 }
 
 MRB_API mrb_value
@@ -1347,6 +1365,7 @@ str_replace(mrb_state *mrb, struct RString *s1, struct RString *s2)
 {
   long len;
 
+  check_frozen(mrb, s1);
   len = RSTR_LEN(s2);
   if (RSTR_SHARED_P(s1)) {
     str_decref(mrb, s1->as.heap.aux.shared);
@@ -1846,7 +1865,7 @@ mrb_cstr_to_inum(mrb_state *mrb, const char *str, int base, int badcheck)
   const char *p;
   char sign = 1;
   int c, uscore;
-  unsigned long n = 0;
+  uint64_t n = 0;
   mrb_int val;
 
 #define conv_digit(c) \
@@ -1966,9 +1985,9 @@ mrb_cstr_to_inum(mrb_state *mrb, const char *str, int base, int badcheck)
     }
     n *= base;
     n += c;
-  }
-  if (n > MRB_INT_MAX) {
-    mrb_raisef(mrb, E_ARGUMENT_ERROR, "string (%S) too big for integer", mrb_str_new_cstr(mrb, str));
+    if (n > MRB_INT_MAX) {
+      mrb_raisef(mrb, E_ARGUMENT_ERROR, "string (%S) too big for integer", mrb_str_new_cstr(mrb, str));
+    }
   }
   val = n;
   if (badcheck) {
@@ -2368,10 +2387,10 @@ mrb_str_cat_str(mrb_state *mrb, mrb_value str, mrb_value str2)
 }
 
 MRB_API mrb_value
-mrb_str_append(mrb_state *mrb, mrb_value str, mrb_value str2)
+mrb_str_append(mrb_state *mrb, mrb_value str1, mrb_value str2)
 {
   str2 = mrb_str_to_str(mrb, str2);
-  return mrb_str_cat_str(mrb, str, str2);
+  return mrb_str_cat_str(mrb, str1, str2);
 }
 
 #define CHAR_ESC_LEN 13 /* sizeof(\x{ hex of 32bit unsigned int } \0) */
@@ -2516,6 +2535,8 @@ mrb_init_string(mrb_state *mrb)
   mrb_define_method(mrb, s, "upcase!",         mrb_str_upcase_bang,     MRB_ARGS_NONE()); /* 15.2.10.5.43 */
   mrb_define_method(mrb, s, "inspect",         mrb_str_inspect,         MRB_ARGS_NONE()); /* 15.2.10.5.46(x) */
   mrb_define_method(mrb, s, "bytes",           mrb_str_bytes,           MRB_ARGS_NONE());
+
+  mrb_define_method(mrb, s, "freeze",          mrb_str_freeze,          MRB_ARGS_NONE());
 
   mrb_gv_set(mrb, mrb_intern_lit(mrb, "$;"), mrb_nil_value());
 }
