@@ -10,9 +10,8 @@ class String
   #
   # ISO 15.2.10.5.15
   def each_line(&block)
-    # expect that str.index accepts an Integer for 1st argument as a byte data
     offset = 0
-    while pos = self.index(0x0a, offset)
+    while pos = self.index("\n", offset)
       block.call(self[offset, pos + 1 - offset])
       offset = pos + 1
     end

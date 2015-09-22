@@ -1391,17 +1391,6 @@ mrb_str_index_m(mrb_state *mrb, mrb_value str)
   }
 
   switch (mrb_type(sub)) {
-    case MRB_TT_FIXNUM: {
-      mrb_int c = mrb_fixnum(sub);
-      mrb_int len = RSTRING_LEN(str);
-      unsigned char *p = (unsigned char*)RSTRING_PTR(str);
-
-      for (;pos<len;pos++) {
-        if (p[pos] == c) return mrb_fixnum_value(pos);
-      }
-      return mrb_nil_value();
-    }
-
     default: {
       mrb_value tmp;
 
@@ -1738,16 +1727,6 @@ mrb_str_rindex_m(mrb_state *mrb, mrb_value str)
   mrb_regexp_check(mrb, sub);
 
   switch (mrb_type(sub)) {
-    case MRB_TT_FIXNUM: {
-      mrb_int c = mrb_fixnum(sub);
-      unsigned char *p = (unsigned char*)RSTRING_PTR(str);
-
-      for (pos=len-1;pos>=0;pos--) {
-        if (p[pos] == c) return mrb_fixnum_value(pos);
-      }
-      return mrb_nil_value();
-    }
-
     default: {
       mrb_value tmp;
 
