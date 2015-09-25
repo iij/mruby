@@ -311,6 +311,32 @@ class String
     end
   end
 
+  def chars(&block)
+    if block_given?
+      self.split('').map do |i|
+        block.call(i)
+      end
+      self
+    else
+      self.split('')
+    end
+  end
+  alias each_char chars
+
+  def codepoints(&block)
+    len = self.size
+
+    if block_given?
+      self.split('').map do|x|
+        block.call(x.ord)
+      end
+      self
+    else
+      self.split('').map{|x| x.ord}
+    end
+  end
+  alias each_codepoint codepoints
+
   def %(args)
     if args.is_a? Array
       sprintf(self, *args)
@@ -318,4 +344,5 @@ class String
       sprintf(self, args)
     end
   end
+
 end
