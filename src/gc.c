@@ -1077,7 +1077,7 @@ mrb_field_write_barrier(mrb_state *mrb, struct RBasic *obj, struct RBasic *value
   if (!is_black(obj)) return;
   if (!is_white(value)) return;
 
-  mrb_assert(!is_dead(mrb, value) && !is_dead(mrb, obj));
+  mrb_assert(mrb->gc_state == GC_STATE_MARK || (!is_dead(mrb, value) && !is_dead(mrb, obj)));
   mrb_assert(is_generational(mrb) || mrb->gc_state != GC_STATE_NONE);
 
   if (is_generational(mrb) || mrb->gc_state == GC_STATE_MARK) {
