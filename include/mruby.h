@@ -35,6 +35,7 @@
 #include "mrbconf.h"
 #include "mruby/common.h"
 #include "mruby/value.h"
+#include "mruby/gc.h"
 #include "mruby/version.h"
 
 /**
@@ -63,10 +64,6 @@ struct mrb_state;
  * See @see mrb_default_allocf for the default implementation.
  */
 typedef void* (*mrb_allocf) (struct mrb_state *mrb, void*, size_t, void *ud);
-
-#ifndef MRB_GC_ARENA_SIZE
-#define MRB_GC_ARENA_SIZE 100
-#endif
 
 #ifndef MRB_FIXED_STATE_ATEXIT_STACK_SIZE
 #define MRB_FIXED_STATE_ATEXIT_STACK_SIZE 5
@@ -114,12 +111,6 @@ struct mrb_context {
   struct RFiber *fib;
 };
 
-enum gc_state {
-  GC_STATE_ROOT = 0,
-  GC_STATE_MARK,
-  GC_STATE_SWEEP
-};
-
 struct mrb_jmpbuf;
 
 typedef void (*mrb_atexit_func)(struct mrb_state*);
@@ -153,32 +144,8 @@ typedef struct mrb_state {
   struct RClass *symbol_class;
   struct RClass *kernel_module;
 
-  struct heap_page *heaps;                /* heaps for GC */
-  struct heap_page *sweeps;
-  struct heap_page *free_heaps;
-  size_t live; /* count of live objects */
-#ifdef MRB_GC_FIXED_ARENA
-  struct RBasic *arena[MRB_GC_ARENA_SIZE]; /* GC protection array */
-#else
-  struct RBasic **arena;                   /* GC protection array */
-  int arena_capa;
-#endif
-  int arena_idx;
-
-  enum gc_state gc_state; /* state of gc */
-  int current_white_part; /* make white object by white_part */
-  struct RBasic *gray_list; /* list of gray objects to be traversed incrementally */
-  struct RBasic *atomic_gray_list; /* list of objects to be traversed atomically */
-  size_t gc_live_after_mark;
-  size_t gc_threshold;
-  int gc_interval_ratio;
-  int gc_step_ratio;
-  mrb_bool gc_disabled:1;
-  mrb_bool gc_full:1;
-  mrb_bool is_generational_gc_mode:1;
-  mrb_bool out_of_memory:1;
-  size_t majorgc_old_threshold;
   struct alloca_header *mems;
+  mrb_gc gc;
 
   mrb_sym symidx;
   struct kh_n2s *name2sym;      /* symbol hash */
@@ -607,42 +574,45 @@ MRB_API struct RClass * mrb_define_module_under(mrb_state *mrb, struct RClass *o
 #define MRB_ARGS_NONE()     ((mrb_aspec)0)
 
 /**
- * Format specifiers for \ref mrb_get_args function
+ * Format specifiers for {mrb_get_args} function
  *
- * Must be a list of following format specifiers:
+ * Must be a C string composed of the following format specifiers:
  *
- * | char | mruby type     | retrieve types      |note                                                |
- * |:----:|----------------|---------------------|----------------------------------------------------|
- * | o    | Object         | mrb_value           | Could be used to retrieve any type of argument     |
- * | C    | Class/Module   | mrb_value           |                                                    |
- * | S    | String         | mrb_value           | when ! follows, the value may be nil               |
- * | A    | Array          | mrb_value           | when ! follows, the value may be nil               |
- * | H    | Hash           | mrb_value           | when ! follows, the value may be nil               |
- * | s    | String         | char *, mrb_int      |  Receive two arguments; s! gives (NULL,0) for nil  |
- * | z    | String         | char *               | NUL terminated string; z! gives NULL for nil       |
- * | a    | Array          | mrb_value *, mrb_int | Receive two arguments; a! gives (NULL,0) for nil   |
- * | f    | Float          | mrb_float           |                                                    |
- * | i    | Integer        | mrb_int             |                                                    |
- * | b    | boolean        | mrb_bool            |                                                    |
- * | n    | Symbol         | mrb_sym             |                                                    |
- * | &    | block          | mrb_value           |                                                    |
- * | *    | rest arguments | mrb_value *, mrb_int | Receive the rest of arguments as an array.         |
- * | \|   | optional       |                     | After this spec following specs would be optional. |
- * | ?    | optional given | mrb_bool            | True if preceding argument is given. Used to check optional argument is given. |
+ * | char | Ruby type      | C types           | Notes                                               |
+ * |:----:|----------------|-------------------|----------------------------------------------------|
+ * | `o`  | {Object}       | {mrb_value}       | Could be used to retrieve any type of argument     |
+ * | `C`  | {Class}/{Module} | {mrb_value}     |                                                    |
+ * | `S`  | {String}       | {mrb_value}       | when `!` follows, the value may be `nil`           |
+ * | `A`  | {Array}        | {mrb_value}       | when `!` follows, the value may be `nil`           |
+ * | `H`  | {Hash}         | {mrb_value}       | when `!` follows, the value may be `nil`           |
+ * | `s`  | {String}       | char *, {mrb_int} |  Receive two arguments; `s!` gives (`NULL`,`0`) for `nil`       |
+ * | `z`  | {String}       | char *            | `NULL` terminated string; `z!` gives `NULL` for `nil`           |
+ * | `a`  | {Array}        | {mrb_value} *, {mrb_int} | Receive two arguments; `a!` gives (`NULL`,`0`) for `nil` |
+ * | `f`  | {Float}        | {mrb_float}       |                                                    |
+ * | `i`  | {Integer}      | {mrb_int}         |                                                    |
+ * | `b`  | boolean        | {mrb_bool}        |                                                    |
+ * | `n`  | {Symbol}       | {mrb_sym}         |                                                    |
+ * | `&`  | block          | {mrb_value}       |                                                    |
+ * | `*`  | rest arguments | {mrb_value} *, {mrb_int} | Receive the rest of arguments as an array.  |
+ * | &vert; | optional     |                   | After this spec following specs would be optional. |
+ * | `?`  | optional given | {mrb_bool}        | `TRUE` if preceding argument is given. Used to check optional argument is given. |
+ *
+ * @see mrb_get_args
  */
 typedef const char *mrb_args_format;
 
 /**
  * Retrieve arguments from mrb_state.
  *
- * When applicable, implicit conversions (such as to_str, to_ary, to_hash) are
+ * When applicable, implicit conversions (such as `to_str`, `to_ary`, `to_hash`) are
  * applied to received arguments.
- * Use it inside a function pointed by mrb_func_t.
+ * Used inside a function of mrb_func_t type.
  *
  * @param mrb The current MRuby state.
- * @param format is a list of format specifiers see @ref mrb_args_format
+ * @param format [mrb_args_format] is a list of format specifiers
  * @param ... The passing variadic arguments must be a pointer of retrieving type.
  * @return the number of arguments retrieved.
+ * @see mrb_args_format
  */
 MRB_API mrb_int mrb_get_args(mrb_state *mrb, mrb_args_format format, ...);
 
@@ -759,7 +729,7 @@ MRB_API void mrb_close(mrb_state *mrb);
 /**
  * The default allocation function.
  *
- * @ref mrb_allocf
+ * @see mrb_allocf
  */
 MRB_API void* mrb_default_allocf(mrb_state*, void*, size_t, void*);
 
@@ -887,9 +857,26 @@ MRB_API mrb_value mrb_attr_get(mrb_state *mrb, mrb_value obj, mrb_sym id);
 MRB_API mrb_bool mrb_respond_to(mrb_state *mrb, mrb_value obj, mrb_sym mid);
 MRB_API mrb_bool mrb_obj_is_instance_of(mrb_state *mrb, mrb_value obj, struct RClass* c);
 
-/* fiber functions (you need to link mruby-fiber mrbgem to use) */
+
+/*
+ * Resume a Fiber
+ *
+ * @mrbgem mruby-fiber
+ */
 MRB_API mrb_value mrb_fiber_resume(mrb_state *mrb, mrb_value fib, mrb_int argc, const mrb_value *argv);
+
+/*
+ * Yield a Fiber
+ *
+ * @mrbgem mruby-fiber
+ */
 MRB_API mrb_value mrb_fiber_yield(mrb_state *mrb, mrb_int argc, const mrb_value *argv);
+
+/*
+ * FiberError reference
+ *
+ * @mrbgem mruby-fiber
+ */
 #define E_FIBER_ERROR (mrb_class_get(mrb, "FiberError"))
 
 /* memory pool implementation */
