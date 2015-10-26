@@ -2085,6 +2085,7 @@ mrb_context_run(mrb_state *mrb, struct RProc *proc, mrb_value self, unsigned int
     CASE(OP_STRCAT) {
       /* A B    R(A).concat(R(B)) */
       mrb_str_concat(mrb, regs[GETARG_A(i)], regs[GETARG_B(i)]);
+      regs = mrb->c->stack;
       NEXT;
     }
 
