@@ -1999,13 +1999,7 @@ mrb_str_to_inum(mrb_state *mrb, mrb_value str, int base, int badcheck)
   char *s;
   mrb_int len;
 
-  if (badcheck) {
-    /* Raises if the string contains a null character (the badcheck) */
-    s = mrb_string_value_cstr(mrb, &str);
-  }
-  else {
-    s = mrb_string_value_ptr(mrb, str);
-  }
+  s = mrb_string_value_ptr(mrb, str);
   if (s) {
     len = RSTRING_LEN(str);
     if (s[len]) {    /* no sentinel somehow */
