@@ -2002,6 +2002,9 @@ mrb_str_to_inum(mrb_state *mrb, mrb_value str, int base, int badcheck)
   s = mrb_string_value_ptr(mrb, str);
   if (s) {
     len = RSTRING_LEN(str);
+    if (badcheck && strlen(s) != len) {
+      mrb_raise(mrb, E_ARGUMENT_ERROR, "string contains null byte");
+    }
     if (s[len]) {    /* no sentinel somehow */
       struct RString *temp_str = str_new(mrb, s, len);
       s = temp_str->ptr;
