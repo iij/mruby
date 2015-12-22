@@ -13,7 +13,7 @@
     mrb_raise(mrb, E_RANGE_ERROR, "Numerical argument is out of domain - " #msg)
 
 /* math functions not provided by Microsoft Visual C++ 2012 or older */
-#if defined _MSC_VER && _MSC_VER < 1800
+#if defined _MSC_VER && _MSC_VER <= 1700
 
 #define MATH_TOLERANCE 1E-12
 
