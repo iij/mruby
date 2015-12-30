@@ -518,14 +518,11 @@ gc_mark_children(mrb_state *mrb, struct RBasic *obj)
   case MRB_TT_ENV:
     {
       struct REnv *e = (struct REnv*)obj;
+      mrb_int i, len;
 
-      if (e->cioff < 0) {
-        int i, len;
-
-        len = (int)e->flags;
-        for (i=0; i<len; i++) {
-          mrb_gc_mark_value(mrb, e->stack[i]);
-        }
+      len = (int)e->flags;
+      for (i=0; i<len; i++) {
+        mrb_gc_mark_value(mrb, e->stack[i]);
       }
     }
     break;
@@ -626,9 +623,18 @@ obj_free(mrb_state *mrb, struct RBasic *obj)
   case MRB_TT_FIBER:
     {
       struct mrb_context *c = ((struct RFiber*)obj)->cxt;
+      if (c && c != mrb->root_c) {
+        mrb_callinfo *ci = c->ci;
+        mrb_callinfo *ce = c->cibase;
 
-      if (c != mrb->root_c)
-        mrb_free_context(mrb, c);
+        while (ce <= ci) {
+          struct REnv *e = ci->env;
+          if (e && !is_dead(mrb, e) && e->cioff >= 0) {
+            mrb_env_unshare(mrb, e);
+          }
+          ci--;
+        }
+      }
     }
     break;
 

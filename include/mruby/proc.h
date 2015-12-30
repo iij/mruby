@@ -20,6 +20,8 @@ struct REnv {
   int cioff;
 };
 
+void mrb_env_unshare(mrb_state*, struct REnv*);
+
 struct RProc {
   MRB_OBJECT_HEADER;
   union {
