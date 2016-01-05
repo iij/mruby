@@ -7,12 +7,12 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
-#include "mruby/dump.h"
-#include "mruby/irep.h"
-#include "mruby/proc.h"
-#include "mruby/string.h"
-#include "mruby/debug.h"
-#include "mruby/error.h"
+#include <mruby/dump.h>
+#include <mruby/irep.h>
+#include <mruby/proc.h>
+#include <mruby/string.h>
+#include <mruby/debug.h>
+#include <mruby/error.h>
 
 #if SIZE_MAX < UINT32_MAX
 # error size_t must be at least 32 bits wide
@@ -614,10 +614,12 @@ mrb_read_irep(mrb_state *mrb, const uint8_t *bin)
   return read_irep(mrb, bin, flags);
 }
 
+void mrb_exc_set(mrb_state *mrb, mrb_value exc);
+
 static void
 irep_error(mrb_state *mrb)
 {
-  mrb->exc = mrb_obj_ptr(mrb_exc_new_str_lit(mrb, E_SCRIPT_ERROR, "irep load error"));
+  mrb_exc_set(mrb, mrb_exc_new_str_lit(mrb, E_SCRIPT_ERROR, "irep load error"));
 }
 
 MRB_API mrb_value

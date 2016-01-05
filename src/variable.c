@@ -4,11 +4,11 @@
 ** See Copyright Notice in mruby.h
 */
 
-#include "mruby.h"
-#include "mruby/array.h"
-#include "mruby/class.h"
-#include "mruby/proc.h"
-#include "mruby/string.h"
+#include <mruby.h>
+#include <mruby/array.h>
+#include <mruby/class.h>
+#include <mruby/proc.h>
+#include <mruby/string.h>
 
 static const char *const mrb_gv_alias_names[] = {
   "$LOAD_PATH=$:",
@@ -288,7 +288,7 @@ iv_free(mrb_state *mrb, iv_tbl *t)
 
 #else
 
-#include "mruby/khash.h"
+#include <mruby/khash.h>
 
 #ifndef MRB_IVHASH_INIT_SIZE
 #define MRB_IVHASH_INIT_SIZE 8

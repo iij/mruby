@@ -6,11 +6,11 @@
 
 #include <string.h>
 #include <limits.h>
-#include "mruby/dump.h"
-#include "mruby/string.h"
-#include "mruby/irep.h"
-#include "mruby/numeric.h"
-#include "mruby/debug.h"
+#include <mruby/dump.h>
+#include <mruby/string.h>
+#include <mruby/irep.h>
+#include <mruby/numeric.h>
+#include <mruby/debug.h>
 
 #define FLAG_BYTEORDER_NATIVE 2
 #define FLAG_BYTEORDER_NONATIVE 0
@@ -54,7 +54,7 @@ write_irep_header(mrb_state *mrb, mrb_irep *irep, uint8_t *buf)
 {
   uint8_t *cur = buf;
 
-  cur += uint32_to_bin(get_irep_record_size_1(mrb, irep), cur);  /* record size */
+  cur += uint32_to_bin((uint32_t)get_irep_record_size_1(mrb, irep), cur);  /* record size */
   cur += uint16_to_bin((uint16_t)irep->nlocals, cur);  /* number of local variable */
   cur += uint16_to_bin((uint16_t)irep->nregs, cur);  /* number of register variable */
   cur += uint16_to_bin((uint16_t)irep->rlen, cur);  /* number of child irep */

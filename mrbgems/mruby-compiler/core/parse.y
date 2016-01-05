@@ -22,12 +22,12 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include "mruby.h"
-#include "mruby/compile.h"
-#include "mruby/proc.h"
-#include "mruby/error.h"
+#include <mruby.h>
+#include <mruby/compile.h>
+#include <mruby/proc.h>
+#include <mruby/error.h>
+#include <mruby/throw.h>
 #include "node.h"
-#include "mruby/throw.h"
 
 #define YYLEX_PARAM p
 
@@ -852,19 +852,24 @@ call_with_block(parser_state *p, node *a, node *b)
 {
   node *n;
 
-  if (a->car == (node*)NODE_SUPER ||
-      a->car == (node*)NODE_ZSUPER) {
+  switch ((enum node_type)(intptr_t)a->car) {
+  case NODE_SUPER:
+  case NODE_ZSUPER:
     if (!a->cdr) a->cdr = cons(0, b);
     else {
       args_with_block(p, a->cdr, b);
     }
-  }
-  else {
+    break;
+  case NODE_CALL:
+  case NODE_FCALL:
     n = a->cdr->cdr->cdr;
     if (!n->car) n->car = cons(0, b);
     else {
       args_with_block(p, n->car, b);
     }
+    break;
+  default:
+    break;
   }
 }
 
@@ -3468,6 +3473,7 @@ peekc_n(parser_state *p, int n)
   do {
     c0 = nextc(p);
     if (c0 == -1) return c0;    /* do not skip partial EOF */
+    if (c0 >= 0) --p->column;
     list = push(list, (node*)(intptr_t)c0);
   } while(n--);
   if (p->pb) {
