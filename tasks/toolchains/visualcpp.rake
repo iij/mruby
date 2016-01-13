@@ -1,4 +1,4 @@
-MRuby::Toolchain.new(:visualcpp) do |conf|
+MRuby::Toolchain.new(:visualcpp) do |conf, _params|
   [conf.cc, conf.cxx].each do |cc|
     cc.command = ENV['CC'] || 'cl.exe'
     cc.flags = [ENV['CFLAGS'] || %w(/c /nologo /W3 /D_DEBUG /MDd /Zi /Od /RTC1 /DHAVE_STRING_H /DNO_GETTIMEOFDAY /D_CRT_SECURE_NO_WARNINGS)]
