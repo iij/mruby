@@ -2155,6 +2155,8 @@ mrb_str_len_to_inum(mrb_state *mrb, const char *str, size_t len, int base, int b
         break;
       }
     }
+    if (*(p - 1) == '0')
+      p--;
   }
   if (p == pend) {
     if (badcheck) goto bad;
