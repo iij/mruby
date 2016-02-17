@@ -339,6 +339,12 @@ genop_peep(codegen_scope *s, mrb_code i, int val)
           return 0;
         }
       }
+      if (c0 == OP_LOADNIL) {
+        if (GETARG_B(i) == GETARG_A(i0)) {
+          s->pc--;
+          return 0;
+        }
+      }
       break;
     case OP_JMPIF:
     case OP_JMPNOT:
@@ -1179,7 +1185,13 @@ codegen(codegen_scope *s, node *tree, int val)
 {
   int nt;
 
-  if (!tree) return;
+  if (!tree) {
+    if (val) {
+      genop(s, MKOP_A(OP_LOADNIL, cursp()));
+      push();
+    }
+    return;
+  }
 
   if (s->irep && s->filename_index != tree->filename_index) {
     s->irep->filename = mrb_parser_get_filename(s->parser, s->filename_index);
