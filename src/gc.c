@@ -634,6 +634,7 @@ obj_free(mrb_state *mrb, struct RBasic *obj)
           }
           ci--;
         }
+        mrb_free_context(mrb, c);
       }
     }
     break;
