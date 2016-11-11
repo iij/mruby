@@ -271,6 +271,16 @@ mrb_class_defined(mrb_state *mrb, const char *name)
   return mrb_const_defined(mrb, mrb_obj_value(mrb->object_class), mrb_symbol(sym));
 }
 
+MRB_API mrb_bool
+mrb_class_defined_under(mrb_state *mrb, struct RClass *outer, const char *name)
+{
+  mrb_value sym = mrb_check_intern_cstr(mrb, name);
+  if (mrb_nil_p(sym)) {
+    return FALSE;
+  }
+  return mrb_const_defined_at(mrb, mrb_obj_value(outer), mrb_symbol(sym));
+}
+
 MRB_API struct RClass *
 mrb_class_get_under(mrb_state *mrb, struct RClass *outer, const char *name)
 {
@@ -1773,9 +1783,21 @@ mod_define_method(mrb_state *mrb, mrb_value self)
   struct RClass *c = mrb_class_ptr(self);
   struct RProc *p;
   mrb_sym mid;
+  mrb_value proc = mrb_undef_value();
   mrb_value blk;
 
-  mrb_get_args(mrb, "n&", &mid, &blk);
+  mrb_get_args(mrb, "n|o&", &mid, &proc, &blk);
+  switch (mrb_type(proc)) {
+    case MRB_TT_PROC:
+      blk = proc;
+      break;
+    case MRB_TT_UNDEF:
+      /* ignored */
+      break;
+    default:
+      mrb_raisef(mrb, E_TYPE_ERROR, "wrong argument type %S (expected Proc)", mrb_obj_value(mrb_obj_class(mrb, proc)));
+      break;
+  }
   if (mrb_nil_p(blk)) {
     mrb_raise(mrb, E_ARGUMENT_ERROR, "no block given");
   }

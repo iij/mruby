@@ -3907,6 +3907,8 @@ parse_string(parser_state *p)
   int end = (intptr_t)p->lex_strterm->cdr->cdr->cdr;
   parser_heredoc_info *hinf = (type & STR_FUNC_HEREDOC) ? parsing_heredoc_inf(p) : NULL;
 
+  if (beg == 0) beg = -3;       /* should never happen */
+  if (end == 0) end = -3;
   newtok(p);
   while ((c = nextc(p)) != end || nest_level != 0) {
     if (hinf && (c == '\n' || c < 0)) {
@@ -5477,7 +5479,10 @@ mrb_parser_parse(parser_state *p, mrbc_context *c)
     p->lex_strterm = NULL;
 
     parser_init_cxt(p, c);
-    yyparse(p);
+    if (yyparse(p) != 0 || p->nerr > 0) {
+      p->tree = 0;
+      return;
+    }
     if (!p->tree) {
       p->tree = new_nil(p);
     }
@@ -6504,7 +6509,7 @@ mrb_parser_dump(mrb_state *mrb, node *tree, int offset)
     break;
 
   case NODE_HEREDOC:
-    printf("NODE_HEREDOC:\n");
+    printf("NODE_HEREDOC (<<%s):\n", ((parser_heredoc_info*)tree)->term);
     mrb_parser_dump(mrb, ((parser_heredoc_info*)tree)->doc, offset+1);
     break;
 
