@@ -772,6 +772,8 @@ attrsym(codegen_scope *s, mrb_sym a)
   return mrb_intern(s->mrb, name2, len+1);
 }
 
+#define CALL_MAXARGS 127
+
 static int
 gen_values(codegen_scope *s, node *t, int val)
 {
@@ -780,7 +782,9 @@ gen_values(codegen_scope *s, node *t, int val)
 
   while (t) {
     is_splat = (intptr_t)t->car->car == NODE_SPLAT; /* splat mode */
-    if (n >= 127 || is_splat) {
+    if (
+      n >= CALL_MAXARGS - 1 /* need to subtract one because vm.c expects an array if n == CALL_MAXARGS */
+      || is_splat) {
       if (val) {
         if (is_splat && n == 0 && (intptr_t)t->car->cdr->car == NODE_ARRAY) {
           codegen(s, t->car->cdr, VAL);
@@ -830,8 +834,6 @@ gen_values(codegen_scope *s, node *t, int val)
   }
   return n;
 }
-
-#define CALL_MAXARGS 127
 
 static void
 gen_call(codegen_scope *s, node *tree, mrb_sym name, int sp, int val, int safe)
@@ -1362,6 +1364,10 @@ codegen(codegen_scope *s, node *tree, int val)
       int pos1, pos2;
       node *e = tree->cdr->cdr->car;
 
+      if (!tree->car) {
+        codegen(s, e, val);
+        return;
+      }
       switch ((intptr_t)tree->car->car) {
       case NODE_TRUE:
       case NODE_INT:
@@ -1798,8 +1804,10 @@ codegen(codegen_scope *s, node *tree, int val)
         int pos;
 
         pop();
-        if (val && vsp >= 0) {
-          genop(s, MKOP_AB(OP_MOVE, vsp, cursp()));
+        if (val) {
+          if (vsp >= 0) {
+            genop(s, MKOP_AB(OP_MOVE, vsp, cursp()));
+          }
           pos = genop(s, MKOP_AsBx(name[0]=='|'?OP_JMPIF:OP_JMPNOT, cursp(), 0));
         }
         else {
@@ -2024,6 +2032,7 @@ codegen(codegen_scope *s, node *tree, int val)
       }
       genop(s, MKOP_sBx(OP_JMP, s->loop->pc2 - s->pc));
     }
+    if (val) push();
     break;
 
   case NODE_RETRY:
@@ -2058,6 +2067,7 @@ codegen(codegen_scope *s, node *tree, int val)
           genop(s, MKOP_sBx(OP_JMP, lp->pc1 - s->pc));
         }
       }
+      if (val) push();
     }
     break;
 
@@ -2285,7 +2295,11 @@ codegen(codegen_scope *s, node *tree, int val)
     if (val) {
       node *n = tree;
 
-      if (!n) break;
+      if (!n) {
+        genop(s, MKOP_A(OP_LOADNIL, cursp()));
+        push();
+        break;
+      }
       codegen(s, n->car, VAL);
       n = n->cdr;
       while (n) {
