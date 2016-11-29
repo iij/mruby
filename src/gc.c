@@ -403,7 +403,7 @@ gc_protect(mrb_state *mrb, mrb_gc *gc, struct RBasic *p)
   if (gc->arena_idx >= MRB_GC_ARENA_SIZE) {
     /* arena overflow error */
     gc->arena_idx = MRB_GC_ARENA_SIZE - 4; /* force room in arena */
-    mrb_raise(mrb, E_RUNTIME_ERROR, "arena overflow error");
+    mrb_exc_raise(mrb, mrb_obj_value(mrb->arena_err));
   }
 #else
   if (gc->arena_idx >= gc->arena_capa) {
@@ -478,6 +478,17 @@ mrb_obj_alloc(mrb_state *mrb, enum mrb_vtype ttype, struct RClass *cls)
   struct RBasic *p;
   static const RVALUE RVALUE_zero = { { { MRB_TT_FALSE } } };
   mrb_gc *gc = &mrb->gc;
+
+  if (cls) {
+    enum mrb_vtype tt = MRB_INSTANCE_TT(cls);
+    if (tt != MRB_TT_FALSE &&
+        ttype != MRB_TT_SCLASS &&
+        ttype != MRB_TT_ICLASS &&
+        ttype != MRB_TT_ENV &&
+        ttype != tt) {
+      mrb_raisef(mrb, E_TYPE_ERROR, "allocation failure of %S", mrb_obj_value(cls));
+    }
+  }
 
 #ifdef MRB_GC_STRESS
   mrb_full_gc(mrb);
@@ -816,6 +827,9 @@ root_scan_phase(mrb_state *mrb, mrb_gc *gc)
   mrb_gc_mark(mrb, (struct RBasic*)mrb->exc);
   /* mark pre-allocated exception */
   mrb_gc_mark(mrb, (struct RBasic*)mrb->nomem_err);
+#ifdef MRB_GC_FIXED_ARENA
+  mrb_gc_mark(mrb, (struct RBasic*)mrb->arena_err);
+#endif
 
   mark_context(mrb, mrb->root_c);
   if (mrb->root_c->fib) {

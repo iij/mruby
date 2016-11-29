@@ -2109,7 +2109,7 @@ primary         : literal
                     }
                 | tLPAREN_ARG {p->lstate = EXPR_ENDARG;} rparen
                     {
-                      $$ = 0;
+                      $$ = new_nil(p);
                     }
                 | tLPAREN compstmt ')'
                     {
@@ -2137,17 +2137,9 @@ primary         : literal
                     {
                       $$ = new_return(p, 0);
                     }
-                | keyword_yield '(' call_args rparen
+                | keyword_yield opt_paren_args
                     {
-                      $$ = new_yield(p, $3);
-                    }
-                | keyword_yield '(' rparen
-                    {
-                      $$ = new_yield(p, 0);
-                    }
-                | keyword_yield
-                    {
-                      $$ = new_yield(p, 0);
+                      $$ = new_yield(p, $2);
                     }
                 | keyword_not '(' expr rparen
                     {
