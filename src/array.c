@@ -118,7 +118,7 @@ ary_modify(mrb_state *mrb, struct RArray *a)
     }
     else {
       mrb_value *ptr, *p;
-      mrb_int len;
+      size_t len;
 
       p = a->ptr;
       len = a->len * sizeof(mrb_value);
@@ -244,7 +244,12 @@ mrb_ary_s_create(mrb_state *mrb, mrb_value self)
 static void
 ary_concat(mrb_state *mrb, struct RArray *a, struct RArray *a2)
 {
-  mrb_int len = a->len + a2->len;
+  mrb_int len;
+
+  if (a2->len > ARY_MAX_SIZE - a->len) {
+    mrb_raise(mrb, E_ARGUMENT_ERROR, "array size too big");
+  }
+  len = a->len + a2->len;
 
   ary_modify(mrb, a);
   if (a->aux.capa < len) {
@@ -559,7 +564,7 @@ static struct RArray*
 ary_dup(mrb_state *mrb, struct RArray *a)
 {
   struct RArray *d = ary_new_capa(mrb, a->len);
-  
+
   ary_replace(mrb, d, a->ptr, a->len);
   return d;
 }
