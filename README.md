@@ -40,7 +40,8 @@ These mrbgems can be used with either
  * master : tracking upstream (mruby/mruby), synchronized every morning.
  * iij : our main development branch
  * s1 : stable version (#1) of iij branch
- * stable\_1\_0 : IIJ's private stable version (#2) based on [mruby forum's 1.0.0 release](http://www.mruby.org/releases/2014/02/09/mruby-1.0.0-released.html)
+ * stable\_1\_0 : IIJ's private stable version (#2) based on [mruby 1.0.0 release](http://www.mruby.org/releases/2014/02/09/mruby-1.0.0-released.html)
+ * stable\_1\_3 : IIJ's private stable version (#3) based on [mruby 1.3.0 release](https://mruby.org/releases/2017/07/04/mruby-1.3.0-released.html)
  * (else) : for pull-request, etc.
 
 ## Continuous Integration
